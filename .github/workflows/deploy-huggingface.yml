@@ -48,11 +48,37 @@ jobs:
         run: |
           python - <<'EOF'
           import os
+          import sys
           from huggingface_hub import HfApi
-          api = HfApi(token=os.environ["HF_TOKEN"])
-          # xoá file cũ không còn dùng trong các thư mục của ứng dụng (giữ .gitattributes của Space)
-          api.upload_folder(repo_id=os.environ["HF_SPACE"], repo_type="space", folder_path="/tmp/space",
-                            delete_patterns=["src/**", "configs/**", "models/**", "data/**", "Dockerfile"],
-                            commit_message=f"Deploy {os.environ['GITHUB_SHA'][:7]}")
-          print("https://huggingface.co/spaces/" + os.environ["HF_SPACE"])
+
+          def fail(msg):
+              # ghi lỗi vào Annotations (xem được không cần đăng nhập); GitHub tự che token thành ***
+              print(f"::error title=Deploy Hugging Face::{' '.join(str(msg).split())[:900]}")
+              sys.exit(1)
+
+          # cắt khoảng trắng / xuống dòng thừa khi dán token hoặc tên Space vào GitHub
+          token, space = os.environ.get("HF_TOKEN", "").strip(), os.environ.get("HF_SPACE", "").strip()
+          if not token:
+              fail("Chưa có secret HF_TOKEN (Settings → Secrets and variables → Actions → tab Secrets)")
+          api = HfApi(token=token)
+          try:
+              who = api.whoami()
+          except Exception as e:
+              fail(f"Token Hugging Face không hợp lệ: {type(e).__name__}: {e}")
+          role = who.get("auth", {}).get("accessToken", {}).get("role")
+          print(f"Token của {who.get('name')}, quyền {role}; Space {space!r}")
+          if role == "read":
+              fail("Token đang là quyền Read – cần tạo token loại Write")
+          try:
+              api.repo_info(space, repo_type="space")
+          except Exception as e:
+              fail(f"Không thấy Space {space!r} (kiểm tra variable HF_SPACE): {type(e).__name__}: {e}")
+          try:
+              # xoá file cũ không còn dùng trong các thư mục của ứng dụng (giữ .gitattributes của Space)
+              api.upload_folder(repo_id=space, repo_type="space", folder_path="/tmp/space",
+                                delete_patterns=["src/**", "configs/**", "models/**", "data/**", "Dockerfile"],
+                                commit_message=f"Deploy {os.environ['GITHUB_SHA'][:7]}")
+          except Exception as e:
+              fail(f"Lỗi khi đẩy file lên Space: {type(e).__name__}: {e}")
+          print("https://huggingface.co/spaces/" + space)
           EOF
