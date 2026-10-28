@@ -1,0 +1,8 @@
+# Chỉ những gì hệ thống chạy thật cần (worker + backend + dashboard) – dùng cho Docker / Hugging Face Spaces
+numpy>=1.26,<3
+opencv-python-headless>=4.9
+onnxruntime>=1.18
+requests>=2.31
+fastapi>=0.111
+uvicorn[standard]>=0.30
+sqlalchemy>=2.0

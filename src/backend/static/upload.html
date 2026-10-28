@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tải video – Smart Parking</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="sign">P</span><span>Smart Parking</span></a>
+    <div class="controls"><a class="btn ghost" href="/">← Về dashboard</a></div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="panel-head"><h2>1. Tải video bãi xe</h2><span class="hint" id="upload-hint">Camera đặt cố định, nhìn từ trên cao · mp4, avi, mov, mkv, webm</span></div>
+      <div class="upload-row">
+        <input type="file" id="file" accept="video/*">
+        <button class="btn" id="upload-btn" disabled>Tải lên</button>
+      </div>
+      <div class="meter" id="upload-meter" hidden><div id="upload-bar"></div></div>
+      <p class="hint" id="upload-status"></p>
+    </section>
+
+    <section class="panel" id="step2" hidden>
+      <div class="panel-head">
+        <h2>2. Xác định ô đỗ</h2>
+        <div class="toolbar">
+          <button class="btn" id="propose-btn">Tự tìm ô đỗ</button>
+          <button class="btn ghost" id="delete-btn" disabled>Xoá ô đã chọn</button>
+          <button class="btn ghost" id="clear-btn">Xoá tất cả</button>
+        </div>
+      </div>
+      <p class="hint">Bấm <b>Tự tìm ô đỗ</b> để mô hình quét video và đề xuất ô (khoảng 20–40 giây).
+        Sửa lại nếu cần: <b>bấm vào ô</b> để chọn rồi nhấn Delete, <b>kéo chuột</b> trên vùng trống để vẽ thêm ô.
+        Ô chỉ được tìm thấy nếu trong video có lúc xe đỗ vào đó – ô luôn trống thì hãy vẽ thêm.</p>
+      <div class="frame-tools">
+        <label for="position">Khung hình hiển thị</label>
+        <input type="range" id="position" min="0" max="1" step="0.05" value="0.9">
+        <span class="hint" id="slot-count">0 ô</span>
+      </div>
+      <div class="canvas-wrap"><canvas id="canvas"></canvas></div>
+      <p class="hint" id="propose-status"></p>
+    </section>
+
+    <section class="panel" id="step3" hidden>
+      <div class="panel-head"><h2>3. Bắt đầu theo dõi</h2></div>
+      <p class="hint">Hệ thống phát lặp video theo thời gian thực: ô trống viền <span class="tag vacant">xanh</span>,
+        có xe viền <span class="tag occupied">đỏ</span>, và cập nhật trên dashboard.</p>
+      <button class="btn" id="start-btn" disabled>Bắt đầu theo dõi</button>
+      <p class="hint" id="start-status"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>Video đã tải lên</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tên</th><th>Kích thước</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="videos"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="/static/upload.js"></script>
+</body>
+</html>

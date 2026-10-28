@@ -1,0 +1,24 @@
+{
+  "model": "mobilenet_v3",
+  "classes": [
+    "vacant",
+    "occupied"
+  ],
+  "input_size": 128,
+  "runtime_pad": 0.1,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "color": "RGB",
+  "input_name": "input",
+  "output_name": "logits",
+  "test_accuracy": 0.99925,
+  "test_f1": 0.99925
+}

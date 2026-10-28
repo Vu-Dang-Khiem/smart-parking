@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Parking</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="sign">P</span><span>Smart Parking</span></div>
+    <div class="controls">
+      <label for="camera-select">Camera</label>
+      <select id="camera-select"></select>
+      <span id="conn" class="conn offline" title="Kết nối realtime">Mất kết nối</span>
+      <a class="btn" href="/upload">Tải video lên</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="empty" class="empty" hidden>
+      <h2>Chưa có camera nào</h2>
+      <p>Chạy worker kèm địa chỉ backend để camera tự đăng ký:</p>
+      <pre>python -m src.vision.worker --video data/sample.mp4 --config configs/camera_01.json --api http://localhost:8000</pre>
+    </section>
+
+    <section id="content" hidden>
+      <div class="summary">
+        <div class="stat vacant"><span class="label">Còn trống</span><span class="value" id="n-vacant">–</span></div>
+        <div class="stat occupied"><span class="label">Có xe</span><span class="value" id="n-occupied">–</span></div>
+        <div class="stat"><span class="label">Tổng số ô</span><span class="value" id="n-total">–</span></div>
+        <div class="stat"><span class="label">Tỷ lệ lấp đầy</span><span class="value" id="rate">–</span>
+          <div class="meter"><div id="rate-bar"></div></div></div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-head"><h2>Camera</h2><span class="hint" id="frame-age"></span></div>
+          <div class="video">
+            <img id="video" alt="Hình ảnh camera có đánh dấu ô đỗ">
+            <div id="video-placeholder" class="placeholder">Đang chờ hình ảnh từ worker…</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Sơ đồ ô đỗ</h2>
+            <span class="legend"><i class="dot vacant"></i>Trống <i class="dot occupied"></i>Có xe <i class="dot unknown"></i>Chưa rõ</span>
+          </div>
+          <svg id="map" class="map" role="img" aria-label="Sơ đồ ô đỗ"></svg>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-head"><h2>Tỷ lệ lấp đầy</h2>
+            <select id="range" aria-label="Khoảng thời gian">
+              <option value="1">1 giờ qua</option>
+              <option value="6">6 giờ qua</option>
+              <option value="24" selected>24 giờ qua</option>
+            </select>
+          </div>
+          <svg id="chart" class="chart" role="img" aria-label="Biểu đồ tỷ lệ lấp đầy theo thời gian"></svg>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Sự kiện gần đây</h2></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Thời gian</th><th>Ô</th><th>Trạng thái</th><th>Độ tin cậy</th></tr></thead>
+              <tbody id="events"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

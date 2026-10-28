@@ -1,0 +1,20 @@
+{
+  "imgsz_pklot": 640,
+  "conf": 0.25,
+  "nms_iou": 0.5,
+  "match_iou": 0.5,
+  "cover_thr_coco": {
+    "640": 0.6,
+    "1280": 0.5
+  },
+  "vehicle_classes": {
+    "2": "car",
+    "3": "motorcycle",
+    "5": "bus",
+    "7": "truck"
+  },
+  "test_detection_pklot": {
+    "mAP50": 0.9927427929020389,
+    "mAP50-95": 0.9260448021319403
+  }
+}

@@ -1,0 +1,35 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Báo cáo, slide và tài liệu cá nhân – không đưa lên Git
+report/
+
+# Dữ liệu và trọng số mô hình (lớn, không đưa lên Git) – trừ phần demo cần để chạy bản public
+data/*
+!data/.gitkeep
+!data/pklot_demo/
+data/pklot_demo/*
+!data/pklot_demo/video.mp4
+!data/pklot_demo/ground_truth.csv
+!data/pklot_demo/info.json
+!data/cnr_demo/
+data/cnr_demo/*
+!data/cnr_demo/camera8/
+data/cnr_demo/camera8/*
+!data/cnr_demo/camera8/video.mp4
+!data/cnr_demo/camera8/ground_truth.csv
+models/*
+!models/.gitkeep
+!models/classifier.onnx
+!models/classifier.json
+!models/yolo/
+models/yolo/*
+!models/yolo/yolo11n_coco_1280.onnx
+!models/yolo/yolo11n_pklot.onnx
+configs/upload-*.json
+
+*.db
+runs/
