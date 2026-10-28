@@ -7,6 +7,10 @@ hiển thị realtime trên dashboard web.
 **MobileNetV3-Small** (học chuyển giao từ ImageNet) → làm mượt theo thời gian → backend + dashboard.
 **Phương pháp so sánh:** HOG/LBP + SVM, CNN nhỏ train từ đầu, ResNet18, YOLOv8n và YOLO11n (train trên PKLot / pretrained COCO).
 
+**Demo trực tuyến:** https://vudangkhiem-smart-parking.hf.space – dashboard realtime với hai camera demo, trang
+[tải video lên](https://vudangkhiem-smart-parking.hf.space/upload) và [API](https://vudangkhiem-smart-parking.hf.space/docs).
+Nếu lâu không ai mở, Space sẽ ngủ; lần mở đầu tiên mất khoảng 1–2 phút để khởi động lại.
+
 ## Kết quả chính
 | Phương pháp | PKLot test | PKLot bỏ 1 camera | CNR-EXT (bãi khác) | Video demo | FPS (CPU, 100 ô) |
 |---|---|---|---|---|---|
