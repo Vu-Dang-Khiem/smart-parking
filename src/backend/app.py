@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from functools import lru_cache
 from pathlib import Path
 
@@ -37,7 +38,14 @@ def create_app(db_url: str | None = None, upload_dir: Path | None = None, config
     engine = make_engine(db_url or os.environ.get("SMART_PARKING_DB", DEFAULT_DB))
     Base.metadata.create_all(engine)
 
-    app = FastAPI(title="Smart Parking", description="API cho hệ thống bãi đỗ xe thông minh")
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Khởi động: bật camera demo (nếu có); tắt: dừng mọi worker con
+        start_demo_cameras()
+        yield
+        app.state.workers.stop_all()
+
+    app = FastAPI(title="Smart Parking", description="API cho hệ thống bãi đỗ xe thông minh", lifespan=lifespan)
     app.state.sessionmaker = sessionmaker(engine, expire_on_commit=False)
     app.state.hub = Hub()
     app.state.frames = FrameStore()
@@ -80,9 +88,6 @@ def create_app(db_url: str | None = None, upload_dir: Path | None = None, config
                                      "--model", str(app.state.classifier_model),
                                      "--api", internal_api or "http://127.0.0.1:8000", "--loop"],
                                     app.state.upload_dir / f"demo-{config.camera_id}.log")
-
-    app.add_event_handler("startup", start_demo_cameras)
-    app.add_event_handler("shutdown", app.state.workers.stop_all)
 
     for module in (cameras, events, stats, videos):
         app.include_router(module.router)
