@@ -1,11 +1,10 @@
-# Demo public trên Hugging Face Spaces (Docker, CPU). Chạy thử trên máy:
+# Chạy backend + dashboard ở chế độ public (giới hạn tải video, camera demo) trong container:
 #   docker build -t smart-parking . && docker run -p 7860:7860 smart-parking  → http://localhost:7860
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Spaces chạy container bằng user uid 1000
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH PYTHONUNBUFFERED=1

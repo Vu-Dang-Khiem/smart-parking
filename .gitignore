@@ -21,6 +21,7 @@ data/cnr_demo/*
 data/cnr_demo/camera8/*
 !data/cnr_demo/camera8/video.mp4
 !data/cnr_demo/camera8/ground_truth.csv
+!data/cnr_demo/camera8/info.json
 models/*
 !models/.gitkeep
 !models/classifier.onnx
@@ -33,3 +34,6 @@ configs/upload-*.json
 
 *.db
 runs/
+
+# Site GitHub Pages dựng trên máy (tools/build_web_demo.py)
+_site/

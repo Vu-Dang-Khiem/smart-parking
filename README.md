@@ -7,9 +7,8 @@ hiển thị realtime trên dashboard web.
 **MobileNetV3-Small** (học chuyển giao từ ImageNet) → làm mượt theo thời gian → backend + dashboard.
 **Phương pháp so sánh:** HOG/LBP + SVM, CNN nhỏ train từ đầu, ResNet18, YOLOv8n và YOLO11n (train trên PKLot / pretrained COCO).
 
-**Demo trực tuyến:** https://vudangkhiem-smart-parking.hf.space – dashboard realtime với hai camera demo, trang
-[tải video lên](https://vudangkhiem-smart-parking.hf.space/upload) và [API](https://vudangkhiem-smart-parking.hf.space/docs).
-Nếu lâu không ai mở, Space sẽ ngủ; lần mở đầu tiên mất khoảng 1–2 phút để khởi động lại.
+**Demo trực tuyến:** https://vu-dang-khiem.github.io/smart-parking/ – bản chạy hoàn toàn trong trình duyệt
+(MobileNetV3 bằng ONNX Runtime Web) trên ảnh PKLot và CNR-EXT thật, kèm thử với video của bạn.
 
 ## Kết quả chính
 | Phương pháp | PKLot test | PKLot bỏ 1 camera | CNR-EXT (bãi khác) | Video demo | FPS (CPU, 100 ô) |
@@ -78,20 +77,21 @@ Tùy chọn worker: `--show` xem cửa sổ video, `--loop` phát lặp, `--no-p
 `--method yolo --model models/yolo/<tên>.onnx --cover-thr <ngưỡng trong yolo.json>` để chạy pipeline YOLO.
 API docs: `http://localhost:8000/docs`.
 
-## Triển khai public (Hugging Face Spaces)
-Space chạy backend + dashboard ở cổng 7860, tự bật hai camera demo (PKLot, CNR-EXT camera 8) và giới hạn
-chức năng tải video (≤ 50 MB, ≤ 2 phút, tối đa 2 video chạy cùng lúc, tự dừng sau 15 phút, giữ 5 video gần nhất).
-Mỗi lần khởi động sinh một mã ngẫu nhiên cho worker; chỉ worker có mã mới gửi được dữ liệu lên dashboard.
+## Demo trên GitHub Pages (chạy trong trình duyệt)
+GitHub Pages chỉ phục vụ trang tĩnh nên bản demo public chạy toàn bộ chuỗi xử lý trong trình duyệt (`web/`):
+cắt ô (nới 10% mỗi phía, lặp điểm ảnh mép, resize `INTER_AREA` như OpenCV) → MobileNetV3 bằng ONNX Runtime Web →
+làm mượt 4/5 khung → dashboard. `web/vision.js` viết lại `slot_cropper`, `classifier`, `smoothing`, phần giải mã YOLO
+và `slot_proposer`; ảnh cắt khớp OpenCV tới ±1 mức xám và cho cùng nhãn với bản Python trên cả 100 ô của ảnh kiểm tra.
+- Hai camera demo dùng ảnh time-lapse thật (PKLot PUCPR, CNR-EXT camera 8), hiện độ chính xác so với nhãn thật.
+- **Thử video của bạn:** video được xử lý ngay trên máy người xem (không tải lên đâu), YOLO11n-COCO tự đề xuất ô đỗ.
+- Không có backend FastAPI / SQLite: lịch sử chỉ tồn tại trong phiên trình duyệt. Hệ thống đầy đủ chạy trên máy (mục trên).
 
-Mỗi lần đẩy lên nhánh `main`, GitHub Action `.github/workflows/deploy-huggingface.yml` chạy test rồi cập nhật Space:
-1. Tạo Space trên Hugging Face: *New Space* → SDK **Gradio** → *Blank* (Docker cần gói trả phí). Space chạy
-   `deploy/huggingface/app.py`, file này khởi động backend FastAPI của dự án ở cổng 7860 – không dùng giao diện Gradio.
-2. Tạo token quyền **Write** (Settings → Access Tokens).
-3. Trong repo GitHub: *Settings → Secrets and variables → Actions* → secret `HF_TOKEN` = token trên,
-   variable `HF_SPACE` = `ten-tai-khoan/ten-space`.
+`tools/build_web_demo.py _site` dựng site (ảnh demo + nhãn thật + mô hình ONNX); GitHub Action `.github/workflows/pages.yml`
+chạy test, dựng và đăng lên Pages mỗi lần đẩy lên `main` (bật một lần: *Settings → Pages → Source: GitHub Actions*).
+Xem trên máy: `python tools/build_web_demo.py _site && python -m http.server -d _site 8080` → http://localhost:8080.
 
-Chạy thử image trên máy: `docker build -t smart-parking . && docker run -p 7860:7860 smart-parking` → http://localhost:7860.
-Các giới hạn đặt bằng biến môi trường `SMART_PARKING_*` trong `deploy/huggingface/app.py` (và `Dockerfile`); khi chạy bằng `uvicorn` trên máy thì không giới hạn.
+Backend cũng có sẵn chế độ public (giới hạn tải video, mã bảo vệ worker, camera demo tự chạy) qua biến môi trường
+`SMART_PARKING_*`; `Dockerfile` đóng gói chế độ này: `docker build -t smart-parking . && docker run -p 7860:7860 smart-parking`.
 
 ## Tải video lên trên web (tự tìm ô đỗ)
 Mở `http://localhost:8000/upload` (nút **Tải video lên** trên dashboard):

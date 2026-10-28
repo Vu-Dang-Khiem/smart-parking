@@ -28,3 +28,4 @@ models/*
 models/yolo/*
 !models/yolo/yolo11n_coco_1280.onnx
 !models/yolo/yolo11n_pklot.onnx
+web

@@ -1,0 +1,8 @@
+/* Bổ sung cho bản chạy trong trình duyệt (dùng chung style.css với dashboard của backend) */
+.note { margin: 0; color: var(--muted); font-size: 0.88rem; max-width: 110ch; }
+.note a { color: var(--accent); }
+.video canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+.player { display: flex; align-items: center; gap: 10px; }
+.player input[type="range"] { flex: 1; }
+.stat .hint { margin-top: 2px; }
+.summary { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }

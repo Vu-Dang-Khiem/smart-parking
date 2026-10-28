@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Parking</title>
+  <meta name="description" content="Phát hiện chỗ đỗ trống realtime bằng MobileNetV3 – chạy ngay trong trình duyệt">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d5fc4'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="web.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#"><span class="sign">P</span><span>Smart Parking</span></a>
+    <div class="controls">
+      <label for="camera-select">Camera</label>
+      <select id="camera-select"></select>
+      <span id="model-status" class="conn offline">Đang tải mô hình…</span>
+      <button class="btn" id="open-upload">Thử video của bạn</button>
+    </div>
+  </header>
+
+  <main class="wrap" id="dashboard">
+    <p class="note">Bản demo chạy hoàn toàn trong trình duyệt: mô hình <b>MobileNetV3-Small</b> (ONNX Runtime Web) phân loại
+      từng ô ngay trên máy bạn, làm mượt 4/5 khung như hệ thống thật. Ảnh time-lapse thật của bộ dữ liệu PKLot và
+      CNR-EXT, mỗi ảnh giữ 3 giây (2 khung/giây). <a href="https://github.com/Vu-Dang-Khiem/smart-parking">Mã nguồn</a></p>
+
+    <div class="summary">
+      <div class="stat vacant"><span class="label">Còn trống</span><span class="value" id="n-vacant">–</span></div>
+      <div class="stat occupied"><span class="label">Có xe</span><span class="value" id="n-occupied">–</span></div>
+      <div class="stat"><span class="label">Tỷ lệ lấp đầy</span><span class="value" id="rate">–</span>
+        <div class="meter"><div id="rate-bar"></div></div></div>
+      <div class="stat" id="acc-card"><span class="label">Đúng so với nhãn thật</span><span class="value" id="acc">–</span>
+        <span class="hint" id="acc-hint"></span></div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><h2>Camera</h2><span class="hint" id="frame-info"></span></div>
+        <div class="video"><canvas id="view"></canvas>
+          <div id="view-placeholder" class="placeholder">Đang tải…</div></div>
+        <div class="player">
+          <button class="btn ghost small" id="play-btn">Tạm dừng</button>
+          <input type="range" id="seek" min="0" max="0" step="1" value="0" aria-label="Ảnh đang xem">
+          <select id="speed" aria-label="Tốc độ phát">
+            <option value="1">1×</option><option value="2">2×</option><option value="4">4×</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Sơ đồ ô đỗ</h2>
+          <span class="legend"><i class="dot vacant"></i>Trống <i class="dot occupied"></i>Có xe <i class="dot unknown"></i>Chưa rõ</span>
+        </div>
+        <svg id="map" class="map" role="img" aria-label="Sơ đồ ô đỗ"></svg>
+        <p class="hint" id="speed-info"></p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-head"><h2>Tỷ lệ lấp đầy</h2><span class="hint" id="chart-hint">theo thời gian trong video</span></div>
+        <svg id="chart" class="chart" role="img" aria-label="Biểu đồ tỷ lệ lấp đầy theo thời gian"></svg>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Sự kiện gần đây</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Thời điểm</th><th>Ô</th><th>Trạng thái</th><th>Độ tin cậy</th></tr></thead>
+            <tbody id="events"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <main class="wrap" id="upload" hidden>
+    <section class="panel">
+      <div class="panel-head"><h2>1. Chọn video bãi xe</h2>
+        <span class="hint">Camera đặt cố định, nhìn từ trên cao · video xử lý ngay trên máy bạn, không tải lên đâu cả</span></div>
+      <div class="upload-row">
+        <input type="file" id="file" accept="video/*">
+        <button class="btn ghost" id="back-btn">← Về dashboard</button>
+      </div>
+      <p class="hint" id="file-status"></p>
+    </section>
+
+    <section class="panel" id="step2" hidden>
+      <div class="panel-head">
+        <h2>2. Xác định ô đỗ</h2>
+        <div class="toolbar">
+          <button class="btn" id="propose-btn">Tự tìm ô đỗ</button>
+          <button class="btn ghost" id="delete-btn" disabled>Xoá ô đã chọn</button>
+          <button class="btn ghost" id="clear-btn">Xoá tất cả</button>
+        </div>
+      </div>
+      <p class="hint">Bấm <b>Tự tìm ô đỗ</b>: YOLO11n (COCO) quét 12 khung trải đều video ngay trong trình duyệt, chỗ có xe
+        <b>đứng yên</b> ở nhiều khung được coi là ô đỗ (khoảng 1–2 phút trên máy thường). Sửa lại nếu cần:
+        <b>bấm vào ô</b> rồi nhấn Delete, <b>kéo chuột</b> trên vùng trống để vẽ thêm ô.</p>
+      <div class="frame-tools">
+        <label for="position">Khung hình hiển thị</label>
+        <input type="range" id="position" min="0" max="1" step="0.05" value="0.9">
+        <span class="hint" id="slot-count">0 ô</span>
+      </div>
+      <div class="meter" id="propose-meter" hidden><div id="propose-bar"></div></div>
+      <div class="canvas-wrap"><canvas id="canvas"></canvas></div>
+      <p class="hint" id="propose-status"></p>
+    </section>
+
+    <section class="panel" id="step3" hidden>
+      <div class="panel-head"><h2>3. Bắt đầu theo dõi</h2></div>
+      <p class="hint">Video phát lặp, MobileNetV3 phân loại từng ô: ô trống viền <span class="tag vacant">xanh</span>,
+        có xe viền <span class="tag occupied">đỏ</span>, hiện trên dashboard như camera thật.</p>
+      <button class="btn" id="start-btn" disabled>Bắt đầu theo dõi</button>
+    </section>
+  </main>
+
+  <video id="user-video" muted playsinline loop hidden></video>
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/ort.min.js"></script>
+  <script src="vision.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
