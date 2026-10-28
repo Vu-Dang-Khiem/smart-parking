@@ -75,18 +75,19 @@ Tùy chọn worker: `--show` xem cửa sổ video, `--loop` phát lặp, `--no-p
 API docs: `http://localhost:8000/docs`.
 
 ## Triển khai public (Hugging Face Spaces)
-`Dockerfile` chạy backend + dashboard ở cổng 7860, tự bật hai camera demo (PKLot, CNR-EXT camera 8) và giới hạn
+Space chạy backend + dashboard ở cổng 7860, tự bật hai camera demo (PKLot, CNR-EXT camera 8) và giới hạn
 chức năng tải video (≤ 50 MB, ≤ 2 phút, tối đa 2 video chạy cùng lúc, tự dừng sau 15 phút, giữ 5 video gần nhất).
 Mỗi lần khởi động sinh một mã ngẫu nhiên cho worker; chỉ worker có mã mới gửi được dữ liệu lên dashboard.
 
 Mỗi lần đẩy lên nhánh `main`, GitHub Action `.github/workflows/deploy-huggingface.yml` chạy test rồi cập nhật Space:
-1. Tạo Space trên Hugging Face: *New Space* → SDK **Docker** → *Blank*.
+1. Tạo Space trên Hugging Face: *New Space* → SDK **Gradio** → *Blank* (Docker cần gói trả phí). Space chạy
+   `deploy/huggingface/app.py`, file này khởi động backend FastAPI của dự án ở cổng 7860 – không dùng giao diện Gradio.
 2. Tạo token quyền **Write** (Settings → Access Tokens).
 3. Trong repo GitHub: *Settings → Secrets and variables → Actions* → secret `HF_TOKEN` = token trên,
    variable `HF_SPACE` = `ten-tai-khoan/ten-space`.
 
 Chạy thử image trên máy: `docker build -t smart-parking . && docker run -p 7860:7860 smart-parking` → http://localhost:7860.
-Các giới hạn đặt bằng biến môi trường `SMART_PARKING_*` trong `Dockerfile`; khi chạy bằng `uvicorn` trên máy thì không giới hạn.
+Các giới hạn đặt bằng biến môi trường `SMART_PARKING_*` trong `deploy/huggingface/app.py` (và `Dockerfile`); khi chạy bằng `uvicorn` trên máy thì không giới hạn.
 
 ## Tải video lên trên web (tự tìm ô đỗ)
 Mở `http://localhost:8000/upload` (nút **Tải video lên** trên dashboard):

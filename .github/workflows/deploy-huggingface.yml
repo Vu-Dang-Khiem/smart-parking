@@ -1,4 +1,4 @@
-# Mỗi lần đẩy lên nhánh main: chạy test, rồi cập nhật Space trên Hugging Face (Space tự build lại Docker).
+# Mỗi lần đẩy lên nhánh main: chạy test, rồi cập nhật Space trên Hugging Face (SDK Gradio, tự khởi động lại).
 # Cần cấu hình trong repo GitHub (Settings → Secrets and variables → Actions):
 #   secret   HF_TOKEN  – token Hugging Face quyền Write
 #   variable HF_SPACE  – tên Space, ví dụ  ten-tai-khoan/smart-parking
@@ -37,7 +37,9 @@ jobs:
         run: |
           mkdir -p /tmp/space
           rsync -a --exclude-from=deploy/huggingface/exclude.txt ./ /tmp/space/
-          cp deploy/huggingface/README.md /tmp/space/README.md
+          cp deploy/huggingface/README.md deploy/huggingface/app.py deploy/huggingface/packages.txt /tmp/space/
+          cp requirements-deploy.txt /tmp/space/requirements.txt
+          echo 'huggingface_hub<1.0   # Gradio 4.44 (Space SDK) needs HfFolder, removed in huggingface_hub 1.x' >> /tmp/space/requirements.txt
           du -sh /tmp/space && find /tmp/space -type f | sort
       - name: Đẩy lên Space
         env:
@@ -50,7 +52,7 @@ jobs:
           api = HfApi(token=os.environ["HF_TOKEN"])
           # xoá file cũ không còn dùng trong các thư mục của ứng dụng (giữ .gitattributes của Space)
           api.upload_folder(repo_id=os.environ["HF_SPACE"], repo_type="space", folder_path="/tmp/space",
-                            delete_patterns=["src/**", "configs/**", "models/**", "data/**"],
+                            delete_patterns=["src/**", "configs/**", "models/**", "data/**", "Dockerfile"],
                             commit_message=f"Deploy {os.environ['GITHUB_SHA'][:7]}")
           print("https://huggingface.co/spaces/" + os.environ["HF_SPACE"])
           EOF

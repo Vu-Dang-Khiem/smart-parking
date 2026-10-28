@@ -8,3 +8,7 @@ results
 tests
 tools
 deploy
+requirements.txt
+requirements-deploy.txt
+Dockerfile
+.dockerignore
